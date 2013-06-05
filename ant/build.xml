@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<!-- ======================================================================
+     Jan 30, 2013 2:27:21 PM
+
+     SassCompassCompiler
+     Automatically compiles sass files (.scss,.sass) with compass
+
+     Copyright 2013 Magnifisites, LLC.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+     @author     Todd Keup <todd@magnifisites.com>
+     @copyright  2013 Magnifisites, LLC. All rights reserved.
+     @see        http://www.ibm.com/developerworks/rational/library/09/eclipsecustomanttasks/#hdr-runningautomatically
+     ====================================================================== -->
+<project name="SassCompassCompiler" default="src">
+    <description>
+            Automatically compiles sass files (.scss,.sass) with compass
+    </description>
+    <!-- ================================= 
+          Global properties
+            cfg = your compass configuration
+            src = location of your sass files
+            css = location of your development css
+            min = location of your minified production css
+         ================================= -->
+    <property name="cfg" location="/var/tools/compass/config.rb"/>
+    <property name="src" value="css/src"/>
+    <property name="css" value="css/src"/>
+    <property name="min" value="css"/>
+    <patternset id="sass.source.files">
+        <include name="**/${src}/*.scss"/>
+        <include name="**/${src}/*.sass"/>
+        <exclude name="**/_*"/>
+    </patternset>
+
+    <!-- ================================= 
+          target: src
+         ================================= -->
+    <target name="src" description="Create expanded source from sass file for development and debugging purposes">
+        <!--
+        A recent update to Windows requires an additional parameter now, vmlauncher;:
+        <apply executable="compass.bat" addsourcefile="false" failonerror="true" verbose="true" force="true">
+        -->
+        <apply executable="compass.bat" addsourcefile="false" failonerror="true" verbose="true" force="true" vmlauncher="false">
+            <arg value="compile"/>
+            <targetfile/>
+            <arg value="--force"/>
+            <arg value="-c"/>
+            <arg value="${cfg}"/>
+            <arg value="-e"/>
+            <arg value="development"/>
+            <fileset dir="${basedir}">
+                <patternset refid="sass.source.files"/>
+            </fileset>
+            <regexpmapper from="^(.*)/${src}/[^/]+\.s(c|a)ss" to="\1" handledirsep="true"/>
+        </apply>
+        <!--
+        This will not work because Ant runs in a separate JRE than Eclipse
+        by default and if you try to change it in the runtime then the
+        basedir path in the regexmapper returns unexpected results
+        <eclipse.refreshLocal resource="${basedir}" depth="infinite"/>
+        -->
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - -
+          target: prd
+         - - - - - - - - - - - - - - - - - -->
+    <target name="prd" description="Create compressed css from sass file for production purposes">
+        <apply executable="compass.bat" addsourcefile="false" failonerror="true" verbose="true" force="true" vmlauncher="false">
+            <arg value="compile"/>
+            <targetfile/>
+            <arg value="--force"/>
+            <arg value="-c"/>
+            <arg value="${cfg}"/>
+            <arg value="-e"/>
+            <arg value="production"/>
+            <fileset dir="${basedir}">
+                <patternset refid="sass.source.files"/>
+            </fileset>
+            <regexpmapper from="^(.*)/${src}/[^/]+\.s(c|a)ss" to="\1" handledirsep="true"/>
+        </apply>
+    </target>
+
+    <!-- ================================= 
+          target: lst
+         ================================= -->
+    <target name="lst" description="Echo a dry-run list of source css to be executed">
+        <apply executable="echo" failonerror="true" verbose="true" force="true">
+            <arg value="project-css-dirname: "/>
+            <targetfile/>
+            <arg value="source-css: "/>
+            <srcfile/>
+            <fileset id="showFileSet" dir="${basedir}">
+                <patternset refid="sass.source.files"/>
+            </fileset>
+            <regexpmapper from="^(.*)/${src}/[^/]+\.s(c|a)ss" to="\1" handledirsep="true"/>
+        </apply>
+        <echo>config: ${cfg}</echo>
+        <echo>basedir: ${basedir}</echo>
+        <echo>files: ${toString:sass.source.files}</echo>
+        <echo>fileset: ${toString:showFileSet}</echo>
+        <!-- <echoproperties/> -->
+    </target>
+</project>
